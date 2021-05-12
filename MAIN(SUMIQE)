@@ -1,0 +1,632 @@
+#if defined(WIN32) || defined(_WIN32) || defined(__WIN32) && !defined(__CYGWIN__)
+
+#include <Windows.h>	
+#include <GdiPlus.h>
+
+#pragma comment(lib, "gdiplus.lib")
+
+ULONG_PTR m_gdiplusToken;  
+
+#endif
+
+#include <host_defines.h>
+#include <stdio.h>
+#include <iostream>
+#include <new>
+
+#include "imageformats.hpp"
+#include "imageio.hpp"
+#include "cuda_runtime.h"
+#include "device_launch_parameters.h"
+
+
+
+//Talisman
+float ToGray(ColorFloatPixel pixel)
+{
+    assert(pixel.r >= 0 && pixel.g >= 0 && pixel.b >= 0);
+	return pixel.b * 0.114f + pixel.g * 0.587f + pixel.r * 0.299f;
+}
+
+__device__ int find3Max(float* in) { 
+    float max1;
+    max1 = max(max(in[0], in[1]), in[2]);
+    if (max1 == in[0]) {
+        return 0;
+    }
+    if (max1 == in[1]) {
+        return 1;
+    }
+    else {
+        return 2;
+    }
+}
+
+__device__ int find4Max(float* in) { 
+    float max1 = max(max(in[0], in[1]), max(in[2], in[3]));
+    if (max1 == in[0]) {
+        return 0;
+    }
+    if (max1 == in[1]) {
+        return 1;
+    }
+    if (max1 == in[2]) {
+        return 2;
+    }
+    else {
+        return 3;
+    }
+}
+
+__device__ int find5Max(float* in) {
+    float max1 = max(max(max(in[0], in[1]), max(in[2], in[3])), in[4]);
+    if (max1 == in[0]) {
+        return 0;
+    }
+    if (max1 == in[1]) {
+        return 1;
+    }
+    if (max1 == in[2]) {
+        return 2;
+    }
+    if (max1 == in[3]) {
+        return 3;
+    }
+    else {
+        return 4;
+    }
+}
+
+__device__ float findMed5(float* in) {
+    int nowmax = find5Max(in);
+    in[nowmax] = in[4];
+    nowmax = find4Max(in);
+    in[nowmax] = in[3];
+    nowmax = find3Max(in);
+    return in[nowmax];
+}
+
+__global__ void median5Kernel(ColorFloatPixel* out, ColorFloatPixel* in, int width, int height) {  
+    int i = blockIdx.x;
+    int size = width * height;
+    float r[5], g[5], b[5];
+
+    for (int j = 0; j < width; j++) {
+        for (int k = 0; k < 5; k++) {
+            r[k] = in[k * size + i * width + j].r;
+            g[k] = in[k * size + i * width + j].g;
+            b[k] = in[k * size + i * width + j].b;
+            assert(r[k] >= 0 && g[k] >= 0 && b[k] >= 0);
+        }
+        out[i * width + j].r = findMed5(r);
+        out[i * width + j].g = findMed5(g);
+        out[i * width + j].b = findMed5(b);
+    }
+}
+
+__global__ void medKernel(ColorFloatPixel* out, ColorFloatPixel* in, int width, int height, int num) {
+    int i = blockIdx.x;
+    int size = width * height;
+    float nmed = (float)num;
+    
+    for (int j = 0; j < width; j++) { 
+        out[i * width + j].r = 0.0f;
+        out[i * width + j].g = 0.0f;
+        out[i * width + j].b = 0.0f;
+    }
+    
+    for (int j = 0; j < width; j++) {
+        for (int k = 0; k < num; k++) {
+            assert(in[k * size + i * width + j].r >= 0 && in[k * size + i * width + j].g >= 0 && in[k * size + i * width + j].b >= 0);
+            out[i * width + j].r += in[k * size + i * width + j].r;
+            out[i * width + j].g += in[k * size + i * width + j].g;
+            out[i * width + j].b += in[k * size + i * width + j].b;
+        }
+    }
+
+    for (int j = 0; j < width; j++) {
+        out[i * width + j].r *= 1.0f / nmed;
+        out[i * width + j].g *= 1.0f / nmed;
+        out[i * width + j].b *= 1.0f / nmed;
+    }
+
+}
+
+__global__ void sumKernel(ColorFloatPixel* out, ColorFloatPixel* in, int width, int height, int num, float gamut) {
+    int i = blockIdx.x;
+    int size = width * height;
+    float Ir = 0.0f, Ig = 0.0f, Ib = 0.0f; // Intensity from 0 to 1
+    float nsum = (float)num;
+
+    for (int j = 0; j < width; j++) {
+        
+        Ir = 0;
+        Ig = 0;
+        Ib = 0;
+        for (int k = 0; k < num; k++) {
+            Ir += pow(in[k * size + i * width + j].r / 255.0f, gamut);
+            Ig += pow(in[k * size + i * width + j].g / 255.0f, gamut);
+            Ib += pow(in[k * size + i * width + j].b / 255.0f, gamut);
+            assert(in[k * size + i * width + j].r >= 0 && in[k * size + i * width + j].g >= 0 && in[k * size + i * width + j].b >= 0);
+        }
+        out[i * width + j].r = pow(Ir * pow(nsum, -1 * pow(Ir / nsum, 1 / gamut)), 1 / gamut) * 255.0f;
+        out[i * width + j].g = pow(Ig * pow(nsum, -1 * pow(Ig / nsum, 1 / gamut)), 1 / gamut) * 255.0f;
+        out[i * width + j].b = pow(Ib * pow(nsum, -1 * pow(Ib / nsum, 1 / gamut)), 1 / gamut) * 255.0f;
+    }
+}
+
+__global__ void sumCosKernel(ColorFloatPixel* out, ColorFloatPixel* in, int width, int height, int num, float gamut) {
+    int i = blockIdx.x;
+    int size = width * height;
+    float Ir = 0.0f, Ig = 0.0f, Ib = 0.0f; // Intensity from 0 to 1
+    float nsum = (float)num;
+
+    for (int j = 0; j < width; j++) {
+        Ir = 0.0f;
+        Ig = 0.0f;
+        Ib = 0.0f;
+        for (int k = 0; k < num; k++) {
+            Ir += pow(in[k * size + i * width + j].r / 255.0f, gamut);
+            Ig += pow(in[k * size + i * width + j].g / 255.0f, gamut);
+            Ib += pow(in[k * size + i * width + j].b / 255.0f, gamut);
+            assert(in[k * size + i * width + j].r >= 0 && in[k * size + i * width + j].g >= 0 && in[k * size + i * width + j].b >= 0);
+        }
+        out[i * width + j].r = pow(Ir * (0.5f + 0.5f / nsum + (0.5f - 0.5f / nsum) * cos(pow(Ir / nsum, 1 / gamut) * 3.14159265f)), 1 / gamut) * 255.0f;
+        out[i * width + j].g = pow(Ig * (0.5f + 0.5f / nsum + (0.5f - 0.5f / nsum) * cos(pow(Ig / nsum, 1 / gamut) * 3.14159265f)), 1 / gamut) * 255.0f;
+        out[i * width + j].b = pow(Ib * (0.5f + 0.5f / nsum + (0.5f - 0.5f / nsum) * cos(pow(Ib / nsum, 1 / gamut) * 3.14159265f)), 1 / gamut) * 255.0f;
+    }
+}
+
+__global__ void sumAdvKernel(ColorFloatPixel* out, ColorFloatPixel* in, int width, int height, int num, float gamut) {
+    int i = blockIdx.x;
+    int size = width * height;
+    float Ir = 0.0f, Ig = 0.0f, Ib = 0.0f; // Intensity from 0 to 1
+    float nsum = (float)num;
+    float npow = pow(nsum, -1 / (nsum + gamut));
+
+    for (int j = 0; j < width; j++) {
+        Ir = 0;
+        Ig = 0;
+        Ib = 0;
+        for (int k = 0; k < num; k++) {
+            Ir += pow(in[k * size + i * width + j].r / 255.0f, gamut);
+            Ig += pow(in[k * size + i * width + j].g / 255.0f, gamut);
+            Ib += pow(in[k * size + i * width + j].b / 255.0f, gamut);
+            assert(in[k * size + i * width + j].r >= 0 && in[k * size + i * width + j].g >= 0 && in[k * size + i * width + j].b >= 0);
+        }
+        out[i * width + j].r = pow(Ir * pow(nsum, -1 * pow(pow(Ir / nsum, 1 / gamut), npow)), 1 / gamut) * 255.0f;
+        out[i * width + j].g = pow(Ig * pow(nsum, -1 * pow(pow(Ig / nsum, 1 / gamut), npow)), 1 / gamut) * 255.0f;
+        out[i * width + j].b = pow(Ib * pow(nsum, -1 * pow(pow(Ib / nsum, 1 / gamut), npow)), 1 / gamut) * 255.0f;
+    }
+}
+
+__global__ void copyKernel(ColorFloatPixel* out, ColorFloatPixel* in, int width, int height, int num) {
+    int i = blockIdx.x;
+    for (int j = 0; j < width; j++) {
+        out[i * width + j].r = in[i * width + j].r;
+        out[i * width + j].g = in[i * width + j].g;
+        out[i * width + j].b = in[i * width + j].b;
+        assert(in[i * width + j].r >= 0 && in[i * width + j].g >= 0 && in[i * width + j].b >= 0);
+    }
+}
+
+__global__ void median3Kernel(ColorFloatPixel* out, ColorFloatPixel* in, int width, int height) {
+    int i = blockIdx.x;
+    int size = width * height;
+    float r[3], g[3], b[3];
+
+    for (int j = 0; j < width; j++) {
+        for (int k = 0; k < 3; k++) {
+            r[k] = in[k * size + i * width + j].r;
+            g[k] = in[k * size + i * width + j].g;
+            b[k] = in[k * size + i * width + j].b;
+            assert(in[k * size + i * width + j].r >= 0 && in[k * size + i * width + j].g >= 0 && in[k * size + i * width + j].b >= 0);
+        }
+        //Findind median across red pixels
+        if ((r[0] <= r[1] && r[0] >= r[2]) || (r[0] <= r[2] && r[0] >= r[1]))
+            out[i * width + j].r = r[0];
+        else 
+            if((r[1] <= r[0] && r[1] >= r[2]) || (r[1] <= r[2] && r[1] >= r[0]))
+                out[i * width + j].r = r[1];
+            else
+                out[i * width + j].r = r[2];
+
+        //Finfind median across green pixels
+        if ((g[0] <= g[1] && g[0] >= g[2]) || (g[0] <= g[2] && g[0] >= g[1]))
+            out[i * width + j].g = g[0];
+        else
+            if ((g[1] <= g[0] && g[1] >= g[2]) || (g[1] <= g[2] && g[1] >= g[0]))
+                out[i * width + j].g = g[1];
+            else
+                out[i * width + j].g = g[2];
+
+        //Finfind median across blue pixels
+        if ((b[0] <= b[1] && b[0] >= b[2]) || (b[0] <= b[2] && b[0] >= b[1]))
+            out[i * width + j].b = b[0];
+        else
+            if ((b[1] <= b[0] && b[1] >= b[2]) || (b[1] <= b[2] && b[1] >= b[0]))
+                out[i * width + j].b = b[1];
+            else
+                out[i * width + j].b = b[2];
+    }
+}
+
+cudaError_t medWithCuda(ColorFloatImage* out, ColorFloatImage* in, int nmed)
+{
+    ColorFloatPixel* dev_in = 0; //Input images in device memory
+    ColorFloatPixel* dev_out = 0; //Output image in device memory
+    cudaError_t cudaStatus;
+
+    int height = in[0].Height(), width = in[0].Width();
+    assert(height > 0 && width > 0);
+    // Choose which GPU to run on, change this on a multi-GPU system.
+    cudaStatus = cudaSetDevice(0);
+    if (cudaStatus != cudaSuccess) {
+        fprintf(stderr, "cudaSetDevice failed!  Do you have a CUDA-capable GPU installed?");
+        goto Error;
+    }
+
+    // Allocate GPU buffers for three vectors (two input, one output)
+    cudaStatus = cudaMalloc((void**)&dev_in, nmed * height * width * sizeof(ColorFloatPixel));
+    if (cudaStatus != cudaSuccess) {
+        fprintf(stderr, "cudaMalloc for dev_in failed!");
+        goto Error;
+    }
+
+    cudaStatus = cudaMalloc((void**)&dev_out, height * width * sizeof(ColorFloatPixel));
+    if (cudaStatus != cudaSuccess) {
+        fprintf(stderr, "cudaMalloc failed!");
+        goto Error;
+    }
+    
+    // Copy input vectors from host memory to GPU buffers.
+    for (int i = 0; i < nmed; i++) {
+        cudaStatus = cudaMemcpy(dev_in + i * height * width, in[i].getPtr(), height * width * sizeof(ColorFloatPixel), cudaMemcpyHostToDevice);
+        if (cudaStatus != cudaSuccess) {
+            fprintf(stderr, "cudaMemcpy input %d failed!", i);
+            goto Error;
+        }
+    }
+    // Launch a kernel on the GPU with one thread for each element.
+    medKernel << < height, 1 >> > (dev_out, dev_in, width, height, nmed);
+
+    // Check for any errors launching the kernel
+    cudaStatus = cudaGetLastError();
+    if (cudaStatus != cudaSuccess) {
+        fprintf(stderr, "medKernel launch failed: %s\n", cudaGetErrorString(cudaStatus));
+        goto Error;
+    }
+
+    // cudaDeviceSynchronize waits for the kernel to finish, and returns
+    // any errors encountered during the launch.
+    cudaStatus = cudaDeviceSynchronize();
+    if (cudaStatus != cudaSuccess) {
+        fprintf(stderr, "cudaDeviceSynchronize returned error code %d after launching addKernel!\n", cudaStatus);
+        goto Error;
+    }
+
+    // Copy output vector from GPU buffer to host memory.
+    cudaStatus = cudaMemcpy(out->getPtr(), dev_out, height * width * sizeof(ColorFloatPixel), cudaMemcpyDeviceToHost);
+    if (cudaStatus != cudaSuccess) {
+        fprintf(stderr, "cudaMemcpy failed!");
+        goto Error;
+    }
+
+Error:
+    cudaFree(dev_in);
+    cudaFree(dev_out);
+
+    return cudaStatus;
+}
+
+cudaError_t medianWithCuda(ColorFloatImage* out, ColorFloatImage* in, int nmed)
+{
+    ColorFloatPixel* dev_in = 0;
+    ColorFloatPixel* dev_out = 0;
+    cudaError_t cudaStatus;
+
+    int height = in[0].Height(), width = in[0].Width();
+    assert(height > 0 && width > 0);
+    // Choose which GPU to run on, change this on a multi-GPU system.
+    cudaStatus = cudaSetDevice(0);
+    if (cudaStatus != cudaSuccess) {
+        fprintf(stderr, "cudaSetDevice failed!  Do you have a CUDA-capable GPU installed?");
+        goto Error;
+    }
+
+    // Allocate GPU buffers for three vectors (two input, one output)
+
+    cudaStatus = cudaMalloc((void**)&dev_in, nmed * height * width * sizeof(ColorFloatPixel));
+    if (cudaStatus != cudaSuccess) {
+        fprintf(stderr, "cudaMalloc for dev_in failed!");
+        goto Error;
+    }
+
+    cudaStatus = cudaMalloc((void**)&dev_out, height * width * sizeof(ColorFloatPixel));
+    if (cudaStatus != cudaSuccess) {
+        fprintf(stderr, "cudaMalloc failed!");
+        goto Error;
+    }
+
+    // Copy input vectors from host memory to GPU buffers.
+    for (int i = 0; i < nmed; i++) {
+        cudaStatus = cudaMemcpy(dev_in + i * height * width, in[i].getPtr(), height * width * sizeof(ColorFloatPixel), cudaMemcpyHostToDevice);
+        if (cudaStatus != cudaSuccess) {
+            fprintf(stderr, "cudaMemcpy input %d failed!", i);
+            goto Error;
+        }
+    }
+    // Launch a kernel on the GPU with one thread for each element.
+    if (nmed == 5) {
+        median5Kernel << < height, 1 >> > (dev_out, dev_in, width, height);
+    }
+    if (nmed == 3) {
+        median3Kernel << < height, 1 >> > (dev_out, dev_in, width, height);
+    }
+    // Check for any errors launching the kernel
+    cudaStatus = cudaGetLastError();
+    if (cudaStatus != cudaSuccess) {
+        fprintf(stderr, "medKernel launch failed: %s\n", cudaGetErrorString(cudaStatus));
+        goto Error;
+    }
+
+    // cudaDeviceSynchronize waits for the kernel to finish, and returns
+    // any errors encountered during the launch.
+    cudaStatus = cudaDeviceSynchronize();
+    if (cudaStatus != cudaSuccess) {
+        fprintf(stderr, "cudaDeviceSynchronize returned error code %d after launching addKernel!\n", cudaStatus);
+        goto Error;
+    }
+
+    // Copy output vector from GPU buffer to host memory.
+    cudaStatus = cudaMemcpy(out->getPtr(), dev_out, height * width * sizeof(ColorFloatPixel), cudaMemcpyDeviceToHost);
+    if (cudaStatus != cudaSuccess) {
+        fprintf(stderr, "cudaMemcpy failed!");
+        goto Error;
+    }
+
+Error:
+    cudaFree(dev_in);
+    cudaFree(dev_out);
+
+    return cudaStatus;
+}
+
+cudaError_t sumWithCuda(ColorFloatImage* out, ColorFloatImage* in, int nsum, float gamut)
+{
+    ColorFloatPixel* dev_in = 0;
+    ColorFloatPixel* dev_out = 0;
+    cudaError_t cudaStatus;
+
+    int height = out->Height(), width = out->Width();
+    assert(height > 0 && width > 0);
+    // Choose which GPU to run on, change this on a multi-GPU system.
+    cudaStatus = cudaSetDevice(0);
+    if (cudaStatus != cudaSuccess) {
+        fprintf(stderr, "cudaSetDevice failed!  Do you have a CUDA-capable GPU installed?");
+        goto Error;
+    }
+
+    // Allocate GPU buffers for three vectors (two input, one output)
+
+    cudaStatus = cudaMalloc((void**)&dev_in, nsum * height * width * sizeof(ColorFloatPixel));
+    if (cudaStatus != cudaSuccess) {
+        fprintf(stderr, "cudaMalloc for dev_in failed!");
+        goto Error;
+    }
+
+    cudaStatus = cudaMalloc((void**)&dev_out, height * width * sizeof(ColorFloatPixel));
+    if (cudaStatus != cudaSuccess) {
+        fprintf(stderr, "cudaMalloc failed!");
+        goto Error;
+    }
+
+    // Copy input vectors from host memory to GPU buffers.
+    for (int i = 0; i < nsum; i++) {
+        cudaStatus = cudaMemcpy(dev_in + i * height * width, in[i].getPtr(), height * width * sizeof(ColorFloatPixel), cudaMemcpyHostToDevice);
+        if (cudaStatus != cudaSuccess) {
+            fprintf(stderr, "cudaMemcpy input %d failed!", i);
+            goto Error;
+        }
+    }
+    // Launch a kernel on the GPU with one thread for each element.
+    sumAdvKernel << < height, 1 >> > (dev_out, dev_in, width, height, nsum, gamut);
+
+    // Check for any errors launching the kernel
+    cudaStatus = cudaGetLastError();
+    if (cudaStatus != cudaSuccess) {
+        fprintf(stderr, "medKernel launch failed: %s\n", cudaGetErrorString(cudaStatus));
+        goto Error;
+    }
+
+    // cudaDeviceSynchronize waits for the kernel to finish, and returns
+    // any errors encountered during the launch.
+    cudaStatus = cudaDeviceSynchronize();
+    if (cudaStatus != cudaSuccess) {
+        fprintf(stderr, "cudaDeviceSynchronize returned error code %d after launching addKernel!\n", cudaStatus);
+        goto Error;
+    }
+
+    // Copy output vector from GPU buffer to host memory.
+    cudaStatus = cudaMemcpy(out->getPtr(), dev_out, height * width * sizeof(ColorFloatPixel), cudaMemcpyDeviceToHost);
+    if (cudaStatus != cudaSuccess) {
+        fprintf(stderr, "cudaMemcpy failed!");
+        goto Error;
+    }
+
+Error:
+    cudaFree(dev_in);
+    cudaFree(dev_out);
+
+    return cudaStatus;
+}
+
+int main_func(int argc, char* argv[])
+{
+    //int nmed = 5;
+    //int nsum = 3;
+
+    //int optimizationMode = 1; //0 - performance, 1 - memory
+    //fprintf(stderr, "Hello, world!");
+    int nsum;
+    int nmed;
+    int optimizationMode;
+    nsum = atoi(argv[1]);
+    nmed = atoi(argv[2]);
+    optimizationMode = atoi(argv[3]);
+    assert(nsum > 0 && nmed > 0 && (optimizationMode == 1 || optimizationMode == 0));
+    int width;
+    int height;
+
+    ColorFloatImage* toSumImages;
+    toSumImages = new ColorFloatImage[nsum];
+
+    switch (optimizationMode) {
+    case 0: {
+
+        ColorFloatImage* inImages; //Array imported images
+        inImages = new ColorFloatImage[nmed * nsum];
+
+        //Images import
+        for (int i = 4; i < 4 + nmed * nsum; i++) {
+            inImages[i - 4] = ImageIO::FileToColorFloatImage(argv[i]);
+        } //*
+
+        std::cout << "Input completed" << std::endl;
+        //std::cout << argv[argc] << std::endl;
+        width = inImages[0].Width();
+        height = inImages[0].Height();
+        //NEED: size check
+
+        //Array of images to be summed
+        for (int i = 0; i < nsum; i++)
+            toSumImages[i] = ColorFloatImage(width, height);
+        
+        //Final image
+        ColorFloatImage res(width, height);
+
+        //Used to single operation
+        /*
+         cudaError_t cudaStatus = medianWithCuda(&res, inImages, nmed);
+         if (cudaStatus != cudaSuccess) {
+             fprintf(stderr, "medianWithCuda failed!");
+             exit(1);
+         }
+        */
+        //End of code region
+
+        //Averaging
+        for (int i = 0; i < nsum; i++) {
+            cudaError_t cudaStatus;
+            if(nmed == 3 || nmed == 5)
+                cudaStatus = medianWithCuda(toSumImages + i, inImages + nmed * i, nmed);
+            else
+                cudaStatus = medWithCuda(toSumImages + i, inImages + nmed * i, nmed);
+            if (cudaStatus != cudaSuccess) {
+                fprintf(stderr, "medWithCuda failed!");
+                exit(1);
+            }
+        }
+
+        cudaError_t cudaStatus = sumWithCuda(&res, toSumImages, nsum, 2.4f);
+        if (cudaStatus != cudaSuccess) {
+            fprintf(stderr, "sumWithCuda failed!");
+            exit(1);
+        }
+
+        std::cout << "CUDA computations ended" << std::endl;
+
+        //Writing output
+        ImageIO::ImageToFile(res, argv[argc - 1]);
+
+        std::cout << "Output writed" << std::endl;
+
+        delete[](inImages);
+        delete[](toSumImages);
+
+        break;
+    }
+    case 1: {
+        //Array of images to average
+        ColorFloatImage* toMedImages;
+        toMedImages = new ColorFloatImage[nmed];
+
+        for (int i = 0; i < nsum; i++) {
+            for (int j = 0; j < nmed; j++) {
+                toMedImages[j] = ImageIO::FileToColorFloatImage(argv[4 + i * nmed + j]);
+                std::cout << "Image " << i * nmed + j << " imported\n";
+            }
+
+            width = toMedImages[0].Width();
+            height = toMedImages[0].Height();
+
+            for (int j = 0; j < nsum; j++)
+                toSumImages[j] = ColorFloatImage(width, height);
+
+            cudaError_t cudaStatus;
+            if(nmed == 3 || nmed == 5)
+                cudaStatus = medianWithCuda(toSumImages + i, toMedImages, nmed);
+            else
+                cudaStatus = medWithCuda(toSumImages + i, toMedImages, nmed);
+            if (cudaStatus != cudaSuccess) {
+                fprintf(stderr, "medWithCuda failed!");
+                exit(1);
+            }
+            std::cout << "Median " << i << " computed\n";
+
+        }
+
+        delete[](toMedImages);
+        ColorFloatImage res(width, height);
+
+        cudaError_t cudaStatus = sumWithCuda(&res, toSumImages, nsum, 2.4f);
+        if (cudaStatus != cudaSuccess) {
+            fprintf(stderr, "sumWithCuda failed!");
+            exit(1);
+        }
+
+        std::cout << "CUDA computations ended" << std::endl;
+
+        ImageIO::ImageToFile(res, argv[argc - 1]);
+
+        std::cout << "Output writed" << std::endl;
+
+        delete[](toSumImages);
+
+        }
+    }
+
+	return 0;
+}
+
+// wchar_t - UTF16 character
+// wmain - entry point for wchar_t arguments
+// Note: changed to UTF-8 due to multiplatform compatibility
+int main(int argc, char* argv[])
+{
+#if defined(WIN32) || defined(_WIN32) || defined(__WIN32) && !defined(__CYGWIN__)
+
+	 // InitInstance
+    Gdiplus::GdiplusStartupInput gdiplusStartupInput;
+    Gdiplus::GdiplusStartup(&m_gdiplusToken, &gdiplusStartupInput, NULL);
+
+	int exit_code;
+
+	try
+	{
+		exit_code = main_func(argc, argv);
+	}
+	catch (...)
+	{
+		exit_code = -1;
+	}
+
+	// ExitInstance
+    Gdiplus::GdiplusShutdown(m_gdiplusToken);
+
+	return exit_code;
+#else
+	return main_func(argc, argv);
+#endif
+}
+
