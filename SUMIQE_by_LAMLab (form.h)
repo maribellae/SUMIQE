@@ -1,0 +1,715 @@
+#pragma once
+
+#include <msclr\marshal.h>
+#include <msclr\marshal_cppstd.h>
+using namespace msclr::interop;
+
+
+#include <vector>
+#include <cassert>
+#include <string>
+#include <filesystem>
+#include <iostream>
+int nsum, nmed, optmode;
+
+extern bool data = 0;
+extern bool data2 = 0;
+extern bool control = 1;
+
+extern std::string SUMIQE = "start C://Users/Maria/source/repos/SUMIQE/x64/DebugSum/SUMIQE.exe ";
+
+namespace Project84 {
+
+	using namespace System;
+	using namespace System::ComponentModel;
+	using namespace System::Collections;
+	using namespace System::Windows::Forms;
+	using namespace System::Data;
+	using namespace System::Drawing;
+	
+
+	/// <summary>
+	/// Сводка для MyForm
+	/// </summary>
+	public ref class MyForm : public System::Windows::Forms::Form
+	{
+	public:
+		MyForm(void)
+		{
+			InitializeComponent();
+			//
+			//TODO: добавьте код конструктора
+			//
+		}
+
+	protected:
+		/// <summary>
+		/// Освободить все используемые ресурсы.
+		/// </summary>
+		~MyForm()
+		{
+			if (components)
+			{
+				delete components;
+			}
+		}
+
+	protected:
+	private: System::Windows::Forms::Button^ button1;
+	private: System::Windows::Forms::Button^ button2;
+	private: System::Windows::Forms::Button^ button3;
+
+	private: System::Windows::Forms::Button^ button5;
+	private: System::Windows::Forms::Button^ button6;
+	private: System::Windows::Forms::Button^ button7;
+	private: System::Windows::Forms::Button^ button8;
+
+	private: System::Windows::Forms::OpenFileDialog^ ofd;
+	private: System::Windows::Forms::OpenFileDialog^ openFileDialog2;
+	private: System::Windows::Forms::PictureBox^ pictureBox2;
+	private: System::Windows::Forms::PictureBox^ pictureBox1;
+	private: System::Windows::Forms::Panel^ panel1;
+	private: System::Windows::Forms::Panel^ panel2;
+	private: System::Windows::Forms::TextBox^ textBox1;
+	private: System::Windows::Forms::TextBox^ textBox2;
+	private: System::Windows::Forms::Label^ label1;
+	private: System::Windows::Forms::Label^ label2;
+	private: System::Windows::Forms::Button^ button4;
+	private: System::Windows::Forms::Button^ button9;
+	private: System::Windows::Forms::Button^ button10;
+	private: System::Windows::Forms::Button^ button11;
+	private: System::Windows::Forms::Button^ button12;
+	private: System::Windows::Forms::Label^ label3;
+	private: System::Windows::Forms::Label^ label4;
+
+
+	private: System::Windows::Forms::Button^ button14;
+	private: System::Windows::Forms::Button^ button13;
+
+
+
+	private:
+		/// <summary>
+		/// Обязательная переменная конструктора.
+		/// </summary>
+		System::ComponentModel::Container ^components;
+
+#pragma region Windows Form Designer generated code
+		/// <summary>
+		/// Требуемый метод для поддержки конструктора — не изменяйте 
+		/// содержимое этого метода с помощью редактора кода.
+		/// </summary>
+		void InitializeComponent(void)
+		{
+			System::ComponentModel::ComponentResourceManager^ resources = (gcnew System::ComponentModel::ComponentResourceManager(MyForm::typeid));
+			this->button1 = (gcnew System::Windows::Forms::Button());
+			this->button2 = (gcnew System::Windows::Forms::Button());
+			this->button3 = (gcnew System::Windows::Forms::Button());
+			this->button5 = (gcnew System::Windows::Forms::Button());
+			this->button6 = (gcnew System::Windows::Forms::Button());
+			this->button7 = (gcnew System::Windows::Forms::Button());
+			this->button8 = (gcnew System::Windows::Forms::Button());
+			this->ofd = (gcnew System::Windows::Forms::OpenFileDialog());
+			this->openFileDialog2 = (gcnew System::Windows::Forms::OpenFileDialog());
+			this->pictureBox2 = (gcnew System::Windows::Forms::PictureBox());
+			this->pictureBox1 = (gcnew System::Windows::Forms::PictureBox());
+			this->panel1 = (gcnew System::Windows::Forms::Panel());
+			this->panel2 = (gcnew System::Windows::Forms::Panel());
+			this->textBox1 = (gcnew System::Windows::Forms::TextBox());
+			this->textBox2 = (gcnew System::Windows::Forms::TextBox());
+			this->label1 = (gcnew System::Windows::Forms::Label());
+			this->label2 = (gcnew System::Windows::Forms::Label());
+			this->button4 = (gcnew System::Windows::Forms::Button());
+			this->button9 = (gcnew System::Windows::Forms::Button());
+			this->button10 = (gcnew System::Windows::Forms::Button());
+			this->button11 = (gcnew System::Windows::Forms::Button());
+			this->button12 = (gcnew System::Windows::Forms::Button());
+			this->button13 = (gcnew System::Windows::Forms::Button());
+			this->button14 = (gcnew System::Windows::Forms::Button());
+			this->label3 = (gcnew System::Windows::Forms::Label());
+			this->label4 = (gcnew System::Windows::Forms::Label());
+			(cli::safe_cast<System::ComponentModel::ISupportInitialize^>(this->pictureBox2))->BeginInit();
+			(cli::safe_cast<System::ComponentModel::ISupportInitialize^>(this->pictureBox1))->BeginInit();
+			this->panel1->SuspendLayout();
+			this->panel2->SuspendLayout();
+			this->SuspendLayout();
+			// 
+			// button1
+			// 
+			this->button1->BackColor = System::Drawing::Color::Black;
+			this->button1->Font = (gcnew System::Drawing::Font(L"Microsoft Sans Serif", 7.8F, System::Drawing::FontStyle::Bold, System::Drawing::GraphicsUnit::Point,
+				static_cast<System::Byte>(204)));
+			this->button1->ForeColor = System::Drawing::Color::Lavender;
+			this->button1->Location = System::Drawing::Point(63, 839);
+			this->button1->Name = L"button1";
+			this->button1->Size = System::Drawing::Size(113, 55);
+			this->button1->TabIndex = 2;
+			this->button1->Text = L"RESET ALL";
+			this->button1->UseVisualStyleBackColor = false;
+			this->button1->Click += gcnew System::EventHandler(this, &MyForm::button1_Click);
+			// 
+			// button2
+			// 
+			this->button2->Font = (gcnew System::Drawing::Font(L"Microsoft Sans Serif", 7.8F, System::Drawing::FontStyle::Bold, System::Drawing::GraphicsUnit::Point,
+				static_cast<System::Byte>(204)));
+			this->button2->ForeColor = System::Drawing::Color::Lavender;
+			this->button2->Image = (cli::safe_cast<System::Drawing::Image^>(resources->GetObject(L"button2.Image")));
+			this->button2->ImageAlign = System::Drawing::ContentAlignment::TopCenter;
+			this->button2->Location = System::Drawing::Point(104, 114);
+			this->button2->Name = L"button2";
+			this->button2->Size = System::Drawing::Size(52, 48);
+			this->button2->TabIndex = 3;
+			this->button2->Text = L"<";
+			this->button2->UseVisualStyleBackColor = true;
+			this->button2->Click += gcnew System::EventHandler(this, &MyForm::button2_Click);
+			// 
+			// button3
+			// 
+			this->button3->Font = (gcnew System::Drawing::Font(L"Microsoft Sans Serif", 7.8F, System::Drawing::FontStyle::Bold, System::Drawing::GraphicsUnit::Point,
+				static_cast<System::Byte>(204)));
+			this->button3->ForeColor = System::Drawing::Color::Lavender;
+			this->button3->Image = (cli::safe_cast<System::Drawing::Image^>(resources->GetObject(L"button3.Image")));
+			this->button3->ImageAlign = System::Drawing::ContentAlignment::TopCenter;
+			this->button3->Location = System::Drawing::Point(190, 114);
+			this->button3->Name = L"button3";
+			this->button3->Size = System::Drawing::Size(53, 48);
+			this->button3->TabIndex = 4;
+			this->button3->Text = L">";
+			this->button3->UseVisualStyleBackColor = true;
+			this->button3->Click += gcnew System::EventHandler(this, &MyForm::button3_Click);
+			// 
+			// button5
+			// 
+			this->button5->BackColor = System::Drawing::Color::Fuchsia;
+			this->button5->Font = (gcnew System::Drawing::Font(L"Microsoft Sans Serif", 9, System::Drawing::FontStyle::Bold, System::Drawing::GraphicsUnit::Point,
+				static_cast<System::Byte>(204)));
+			this->button5->ForeColor = System::Drawing::Color::Lavender;
+			this->button5->Image = (cli::safe_cast<System::Drawing::Image^>(resources->GetObject(L"button5.Image")));
+			this->button5->ImageAlign = System::Drawing::ContentAlignment::TopCenter;
+			this->button5->Location = System::Drawing::Point(104, 46);
+			this->button5->Name = L"button5";
+			this->button5->Size = System::Drawing::Size(52, 48);
+			this->button5->TabIndex = 6;
+			this->button5->Text = L"+";
+			this->button5->UseVisualStyleBackColor = false;
+			this->button5->Click += gcnew System::EventHandler(this, &MyForm::button5_Click);
+			// 
+			// button6
+			// 
+			this->button6->Font = (gcnew System::Drawing::Font(L"Microsoft Sans Serif", 7.8F, System::Drawing::FontStyle::Bold, System::Drawing::GraphicsUnit::Point,
+				static_cast<System::Byte>(204)));
+			this->button6->ForeColor = System::Drawing::Color::Lavender;
+			this->button6->Image = (cli::safe_cast<System::Drawing::Image^>(resources->GetObject(L"button6.Image")));
+			this->button6->ImageAlign = System::Drawing::ContentAlignment::TopCenter;
+			this->button6->Location = System::Drawing::Point(190, 46);
+			this->button6->Name = L"button6";
+			this->button6->Size = System::Drawing::Size(53, 48);
+			this->button6->TabIndex = 7;
+			this->button6->Text = L"=";
+			this->button6->UseVisualStyleBackColor = true;
+			this->button6->Click += gcnew System::EventHandler(this, &MyForm::button6_Click);
+			// 
+			// button7
+			// 
+			this->button7->BackColor = System::Drawing::Color::Black;
+			this->button7->Font = (gcnew System::Drawing::Font(L"Microsoft Sans Serif", 7.8F, System::Drawing::FontStyle::Bold, System::Drawing::GraphicsUnit::Point,
+				static_cast<System::Byte>(204)));
+			this->button7->ForeColor = System::Drawing::Color::Lavender;
+			this->button7->Location = System::Drawing::Point(193, 839);
+			this->button7->Name = L"button7";
+			this->button7->Size = System::Drawing::Size(96, 55);
+			this->button7->TabIndex = 8;
+			this->button7->Text = L"CLOSE";
+			this->button7->UseVisualStyleBackColor = false;
+			this->button7->Click += gcnew System::EventHandler(this, &MyForm::button7_Click);
+			// 
+			// button8
+			// 
+			this->button8->BackColor = System::Drawing::Color::Black;
+			this->button8->Font = (gcnew System::Drawing::Font(L"Microsoft Sans Serif", 7.8F, System::Drawing::FontStyle::Bold, System::Drawing::GraphicsUnit::Point,
+				static_cast<System::Byte>(204)));
+			this->button8->ForeColor = System::Drawing::Color::Lavender;
+			this->button8->Location = System::Drawing::Point(63, 545);
+			this->button8->Name = L"button8";
+			this->button8->Size = System::Drawing::Size(226, 84);
+			this->button8->TabIndex = 9;
+			this->button8->Text = L"OPEN";
+			this->button8->UseVisualStyleBackColor = false;
+			this->button8->Click += gcnew System::EventHandler(this, &MyForm::button8_Click);
+			// 
+			// ofd
+			// 
+			this->ofd->FileName = L"openFileDialog1";
+			this->ofd->Filter = L"\"PNG|*.png|All Files|*.*\"";
+			this->ofd->Multiselect = true;
+			this->ofd->FileOk += gcnew System::ComponentModel::CancelEventHandler(this, &MyForm::ofd_FileOk);
+			// 
+			// openFileDialog2
+			// 
+			this->openFileDialog2->FileName = L"openFileDialog2";
+			// 
+			// pictureBox2
+			// 
+			this->pictureBox2->Anchor = static_cast<System::Windows::Forms::AnchorStyles>((System::Windows::Forms::AnchorStyles::Bottom | System::Windows::Forms::AnchorStyles::Left));
+			this->pictureBox2->Location = System::Drawing::Point(-4, 0);
+			this->pictureBox2->MinimumSize = System::Drawing::Size(720, 960);
+			this->pictureBox2->Name = L"pictureBox2";
+			this->pictureBox2->Size = System::Drawing::Size(720, 960);
+			this->pictureBox2->SizeMode = System::Windows::Forms::PictureBoxSizeMode::Zoom;
+			this->pictureBox2->TabIndex = 11;
+			this->pictureBox2->TabStop = false;
+			this->pictureBox2->Click += gcnew System::EventHandler(this, &MyForm::pictureBox2_Click);
+			// 
+			// pictureBox1
+			// 
+			this->pictureBox1->Anchor = static_cast<System::Windows::Forms::AnchorStyles>((((System::Windows::Forms::AnchorStyles::Top | System::Windows::Forms::AnchorStyles::Bottom)
+				| System::Windows::Forms::AnchorStyles::Left)
+				| System::Windows::Forms::AnchorStyles::Right));
+			this->pictureBox1->Location = System::Drawing::Point(3, 0);
+			this->pictureBox1->Name = L"pictureBox1";
+			this->pictureBox1->Size = System::Drawing::Size(720, 960);
+			this->pictureBox1->SizeMode = System::Windows::Forms::PictureBoxSizeMode::Zoom;
+			this->pictureBox1->TabIndex = 12;
+			this->pictureBox1->TabStop = false;
+			this->pictureBox1->Click += gcnew System::EventHandler(this, &MyForm::pictureBox1_Click);
+			// 
+			// panel1
+			// 
+			this->panel1->Controls->Add(this->pictureBox2);
+			this->panel1->Location = System::Drawing::Point(413, 42);
+			this->panel1->MinimumSize = System::Drawing::Size(720, 960);
+			this->panel1->Name = L"panel1";
+			this->panel1->Size = System::Drawing::Size(720, 960);
+			this->panel1->TabIndex = 12;
+			this->panel1->Paint += gcnew System::Windows::Forms::PaintEventHandler(this, &MyForm::panel1_Paint);
+			// 
+			// panel2
+			// 
+			this->panel2->Controls->Add(this->pictureBox1);
+			this->panel2->Location = System::Drawing::Point(1158, 42);
+			this->panel2->Name = L"panel2";
+			this->panel2->Size = System::Drawing::Size(720, 960);
+			this->panel2->TabIndex = 13;
+			this->panel2->Paint += gcnew System::Windows::Forms::PaintEventHandler(this, &MyForm::panel2_Paint);
+			// 
+			// textBox1
+			// 
+			this->textBox1->BackColor = System::Drawing::Color::Lavender;
+			this->textBox1->Location = System::Drawing::Point(24, 360);
+			this->textBox1->Name = L"textBox1";
+			this->textBox1->Size = System::Drawing::Size(132, 22);
+			this->textBox1->TabIndex = 14;
+			this->textBox1->TextChanged += gcnew System::EventHandler(this, &MyForm::textBox1_TextChanged);
+			// 
+			// textBox2
+			// 
+			this->textBox2->BackColor = System::Drawing::Color::Lavender;
+			this->textBox2->Location = System::Drawing::Point(190, 360);
+			this->textBox2->Name = L"textBox2";
+			this->textBox2->Size = System::Drawing::Size(134, 22);
+			this->textBox2->TabIndex = 15;
+			// 
+			// label1
+			// 
+			this->label1->AutoSize = true;
+			this->label1->Font = (gcnew System::Drawing::Font(L"Microsoft Sans Serif", 7.8F, System::Drawing::FontStyle::Bold, System::Drawing::GraphicsUnit::Point,
+				static_cast<System::Byte>(204)));
+			this->label1->ForeColor = System::Drawing::Color::Lavender;
+			this->label1->Location = System::Drawing::Point(67, 396);
+			this->label1->Name = L"label1";
+			this->label1->Size = System::Drawing::Size(52, 17);
+			this->label1->TabIndex = 16;
+			this->label1->Text = L"NMED";
+			this->label1->Click += gcnew System::EventHandler(this, &MyForm::label1_Click);
+			// 
+			// label2
+			// 
+			this->label2->AutoSize = true;
+			this->label2->Font = (gcnew System::Drawing::Font(L"Microsoft Sans Serif", 7.8F, System::Drawing::FontStyle::Bold, System::Drawing::GraphicsUnit::Point,
+				static_cast<System::Byte>(204)));
+			this->label2->ForeColor = System::Drawing::Color::Lavender;
+			this->label2->Location = System::Drawing::Point(234, 396);
+			this->label2->Name = L"label2";
+			this->label2->Size = System::Drawing::Size(52, 17);
+			this->label2->TabIndex = 17;
+			this->label2->Text = L"NSUM";
+			// 
+			// button4
+			// 
+			this->button4->BackColor = System::Drawing::Color::Black;
+			this->button4->Font = (gcnew System::Drawing::Font(L"Microsoft Sans Serif", 7.8F, System::Drawing::FontStyle::Bold, System::Drawing::GraphicsUnit::Point,
+				static_cast<System::Byte>(204)));
+			this->button4->ForeColor = System::Drawing::Color::Lavender;
+			this->button4->Location = System::Drawing::Point(141, 427);
+			this->button4->Name = L"button4";
+			this->button4->Size = System::Drawing::Size(75, 44);
+			this->button4->TabIndex = 18;
+			this->button4->Text = L"OK";
+			this->button4->UseVisualStyleBackColor = false;
+			this->button4->Click += gcnew System::EventHandler(this, &MyForm::button4_Click_1);
+			// 
+			// button9
+			// 
+			this->button9->Location = System::Drawing::Point(-11, 0);
+			this->button9->Name = L"button9";
+			this->button9->Size = System::Drawing::Size(10, 10);
+			this->button9->TabIndex = 19;
+			this->button9->Text = L"button9";
+			this->button9->UseVisualStyleBackColor = true;
+			// 
+			// button10
+			// 
+			this->button10->Location = System::Drawing::Point(-12, 1);
+			this->button10->Name = L"button10";
+			this->button10->Size = System::Drawing::Size(10, 10);
+			this->button10->TabIndex = 20;
+			this->button10->Text = L"button10";
+			this->button10->UseVisualStyleBackColor = true;
+			// 
+			// button11
+			// 
+			this->button11->Location = System::Drawing::Point(-18, 401);
+			this->button11->Name = L"button11";
+			this->button11->Size = System::Drawing::Size(10, 23);
+			this->button11->TabIndex = 21;
+			this->button11->Text = L"button11";
+			this->button11->UseVisualStyleBackColor = true;
+			this->button11->Click += gcnew System::EventHandler(this, &MyForm::button11_Click);
+			// 
+			// button12
+			// 
+			this->button12->BackColor = System::Drawing::Color::Black;
+			this->button12->Font = (gcnew System::Drawing::Font(L"Microsoft Sans Serif", 7.8F, System::Drawing::FontStyle::Bold, System::Drawing::GraphicsUnit::Point,
+				static_cast<System::Byte>(204)));
+			this->button12->ForeColor = System::Drawing::Color::Lavender;
+			this->button12->Location = System::Drawing::Point(190, 215);
+			this->button12->Name = L"button12";
+			this->button12->Size = System::Drawing::Size(134, 51);
+			this->button12->TabIndex = 22;
+			this->button12->Text = L"PERFOMANCE";
+			this->button12->UseVisualStyleBackColor = false;
+			this->button12->Click += gcnew System::EventHandler(this, &MyForm::button12_Click);
+			// 
+			// button13
+			// 
+			this->button13->BackColor = System::Drawing::Color::Black;
+			this->button13->Font = (gcnew System::Drawing::Font(L"Microsoft Sans Serif", 7.8F, System::Drawing::FontStyle::Bold, System::Drawing::GraphicsUnit::Point,
+				static_cast<System::Byte>(204)));
+			this->button13->ForeColor = System::Drawing::Color::Lavender;
+			this->button13->Location = System::Drawing::Point(24, 215);
+			this->button13->Name = L"button13";
+			this->button13->Size = System::Drawing::Size(132, 51);
+			this->button13->TabIndex = 23;
+			this->button13->Text = L"MEMORY";
+			this->button13->UseVisualStyleBackColor = false;
+			this->button13->Click += gcnew System::EventHandler(this, &MyForm::button13_Click);
+			// 
+			// button14
+			// 
+			this->button14->BackColor = System::Drawing::Color::Black;
+			this->button14->Font = (gcnew System::Drawing::Font(L"Microsoft Sans Serif", 7.8F, System::Drawing::FontStyle::Bold, System::Drawing::GraphicsUnit::Point,
+				static_cast<System::Byte>(204)));
+			this->button14->ForeColor = System::Drawing::Color::Lavender;
+			this->button14->Location = System::Drawing::Point(63, 708);
+			this->button14->Name = L"button14";
+			this->button14->Size = System::Drawing::Size(226, 68);
+			this->button14->TabIndex = 24;
+			this->button14->Text = L"SHOW RESULT";
+			this->button14->UseVisualStyleBackColor = false;
+			this->button14->Click += gcnew System::EventHandler(this, &MyForm::button14_Click);
+			// 
+			// label3
+			// 
+			this->label3->AutoSize = true;
+			this->label3->Font = (gcnew System::Drawing::Font(L"Microsoft Sans Serif", 7.8F, System::Drawing::FontStyle::Bold, System::Drawing::GraphicsUnit::Point,
+				static_cast<System::Byte>(204)));
+			this->label3->ForeColor = System::Drawing::Color::Lavender;
+			this->label3->Location = System::Drawing::Point(67, 327);
+			this->label3->Name = L"label3";
+			this->label3->Size = System::Drawing::Size(52, 17);
+			this->label3->TabIndex = 25;
+			this->label3->Text = L"NMED";
+			// 
+			// label4
+			// 
+			this->label4->AutoSize = true;
+			this->label4->Font = (gcnew System::Drawing::Font(L"Microsoft Sans Serif", 7.8F, System::Drawing::FontStyle::Bold, System::Drawing::GraphicsUnit::Point,
+				static_cast<System::Byte>(204)));
+			this->label4->ForeColor = System::Drawing::Color::Lavender;
+			this->label4->Location = System::Drawing::Point(234, 327);
+			this->label4->Name = L"label4";
+			this->label4->Size = System::Drawing::Size(52, 17);
+			this->label4->TabIndex = 26;
+			this->label4->Text = L"NSUM";
+			// 
+			// MyForm
+			// 
+			this->AutoScaleDimensions = System::Drawing::SizeF(8, 16);
+			this->AutoScaleMode = System::Windows::Forms::AutoScaleMode::Font;
+			this->BackColor = System::Drawing::SystemColors::WindowText;
+			this->ClientSize = System::Drawing::Size(1902, 1033);
+			this->Controls->Add(this->label4);
+			this->Controls->Add(this->label3);
+			this->Controls->Add(this->button14);
+			this->Controls->Add(this->button13);
+			this->Controls->Add(this->button12);
+			this->Controls->Add(this->button11);
+			this->Controls->Add(this->button10);
+			this->Controls->Add(this->button9);
+			this->Controls->Add(this->button4);
+			this->Controls->Add(this->label2);
+			this->Controls->Add(this->label1);
+			this->Controls->Add(this->textBox2);
+			this->Controls->Add(this->textBox1);
+			this->Controls->Add(this->panel2);
+			this->Controls->Add(this->panel1);
+			this->Controls->Add(this->button8);
+			this->Controls->Add(this->button7);
+			this->Controls->Add(this->button6);
+			this->Controls->Add(this->button5);
+			this->Controls->Add(this->button3);
+			this->Controls->Add(this->button2);
+			this->Controls->Add(this->button1);
+			this->Name = L"MyForm";
+			this->Text = L"MyForm";
+			this->Load += gcnew System::EventHandler(this, &MyForm::MyForm_Load);
+			(cli::safe_cast<System::ComponentModel::ISupportInitialize^>(this->pictureBox2))->EndInit();
+			(cli::safe_cast<System::ComponentModel::ISupportInitialize^>(this->pictureBox1))->EndInit();
+			this->panel1->ResumeLayout(false);
+			this->panel2->ResumeLayout(false);
+			this->ResumeLayout(false);
+			this->PerformLayout();
+
+		}
+#pragma endregion
+
+		array<String^>^ files;
+		String^ pathh= "C:/ImagesTests/Stack100.png";
+		String^ path;
+		int currentIndex;
+		const int zoomLevel = 100;
+		int Zooms = 0;
+		////int nsum, nmed;
+		//bool exist = FALSE;
+
+	//	int control = 0;
+	//private: System::Void button2_Click(System::Object^ sender, System::EventArgs^ e) {
+	//}
+
+
+
+/*		void checkFile(char* file_name) {
+			std::ifstream file; 
+			file.open(filename); 
+			if (!file) cout « "\ nCannot find this file:" « filename;*/
+private: System::Void button1_Click(System::Object^ sender, System::EventArgs^ e) {
+	Application::Restart();
+
+}
+private: System::Void button7_Click(System::Object^ sender, System::EventArgs^ e) {
+	pictureBox2->ImageLocation = "";
+}
+	  //MyDialog* ofd = gcnew MyDialog();
+	private: System::Void button8_Click(System::Object^ sender, System::EventArgs^ e) {
+		while (!data) {}
+		if (ofd->ShowDialog() == System::Windows::Forms::DialogResult::OK) {
+			pictureBox2->ImageLocation = ofd->FileName;
+
+			//std::string fname = marshal_as< std::string >(ofd->FileName);
+
+			path = System::IO::Path::GetDirectoryName(ofd->FileName);
+
+			files = System::IO::Directory::GetFiles(path);
+
+			for (int i = 0; i < files->Length; i++) {
+				if (files[i] == ofd->FileName) {
+					currentIndex = i;
+					break;
+				}
+			}
+
+			int  nfiles = files->Length;
+			//std::cout << nfiles;
+			assert(files->Length > 0);
+			assert(files->Length > (nmed * nsum));
+			//	std::cout << "NOW" << nfiles << std::endl;
+			std::vector< std::string > fnames(nfiles);
+			//std::vector< std::string > result(1);
+			for (int i = 0; i < files->Length; i++) {
+				//files[i] == ofd->FileName;
+				String^ curFile = files[i];
+
+				//currentIndex = i;
+				fnames[i] = marshal_as< std::string >(curFile);
+				std::cout << '[' << i << "] " << fnames[i] << std::endl;
+				SUMIQE = SUMIQE + fnames[i] + " ";
+				//std::cout << SUMIQE << std::endl;
+				if (i == files->Length - 1) {
+					data2 = 1;
+					SUMIQE += "C:/ImagesTests/Stack100.png";
+					//std::cout << "data2 == 1";
+					const char* s = SUMIQE.c_str();
+					std::cout << s;
+					int ress = system(s);
+					if (ress != 0) {
+						fprintf(stderr, "Can't run system command");
+					}
+					
+						//pictureBox1->ImageLocation = "C:/ImagesTests/Stack100.png";
+
+					
+					std::cout << data2 << std::endl;
+				}
+				// (files->Length != nfiles + 1) {}
+				//std::cout << "OKEEEY";
+				//std::cout << "AFTER"<< files->Length << std::endl;
+
+				//System::IO::DirectoryInfo ^dirinf = gcnew System::IO::DirectoryInfo ("C:/ImagesTests");
+				//dirinf->GetFiles()->Length;
+
+				/*while (control != 1) {
+					System::IO::DirectoryInfo^ dirinf1 = gcnew System::IO::DirectoryInfo("C:/ImagesTests");
+					dirinf1->GetFiles()->Length;
+					if (dirinf1 != dirinf) control = 1;
+					//Image->FromFile("C: / ImagesTests / Stack100.png");
+				}*/
+
+				//pictureBox1->ImageLocation = "C:/ImagesTests/Stack100.png";
+
+
+				//pathh = "C:/ImagesTests/Stack100.png";
+				//bool exist = FALSE;
+			}
+
+			//while(!control){}
+			//pictureBox1->ImageLocation = "C:/ImagesTests/Stack100.png";
+		}
+	}
+private: System::Void button3_Click(System::Object^ sender, System::EventArgs^ e) {
+	if (currentIndex != files->Length - 1) {
+		currentIndex++;
+	}
+	pictureBox2->ImageLocation = files[currentIndex];  
+}
+private: System::Void button2_Click(System::Object^ sender, System::EventArgs^ e) {
+	if (currentIndex != 0) {
+		currentIndex--;
+	}
+	pictureBox2->ImageLocation = files[currentIndex];
+}
+private: System::Void button5_Click(System::Object^ sender, System::EventArgs^ e) {
+	std::cout << pictureBox2->Top << " ";
+	std::cout << pictureBox2->Left << " ";
+	std::cout << pictureBox2->Height << " ";
+	std::cout << pictureBox2->Width << " ";
+
+
+
+	pictureBox2->Top -= zoomLevel / 2;
+	pictureBox2->Left -= zoomLevel / 2;
+	pictureBox2->Height += zoomLevel;
+	pictureBox2->Width += zoomLevel;
+
+	pictureBox1->Top -= zoomLevel / 2;
+	pictureBox1->Left -= zoomLevel / 2;
+	pictureBox1->Height += zoomLevel;
+	pictureBox1->Width += zoomLevel;
+
+	Zooms++;
+	//std::cout << Zooms << " ";
+}
+private: System::Void button4_Click(System::Object^ sender, System::EventArgs^ e) {
+
+}
+
+private: System::Void button6_Click(System::Object^ sender, System::EventArgs^ e) {
+	//std::cout << Zooms << " ";
+	int newZoom = Zooms;
+	
+		for (int i = 0; i < newZoom; i++) {
+			pictureBox2->Top += zoomLevel / 2;
+			pictureBox2->Left += zoomLevel / 2;
+			pictureBox2->Height -= zoomLevel;
+			pictureBox2->Width -= zoomLevel;
+			pictureBox1->Top += zoomLevel / 2;
+			pictureBox1->Left += zoomLevel / 2;
+			pictureBox1->Height -= zoomLevel;
+			pictureBox1->Width -= zoomLevel;
+
+		}
+
+	Zooms = 0;
+}
+
+private: System::Void pictureBox2_Click(System::Object^ sender, System::EventArgs^ e) {
+}
+private: System::Void ofd_FileOk(System::Object^ sender, System::ComponentModel::CancelEventArgs^ e) {
+}
+private: System::Void pictureBox1_Click(System::Object^ sender, System::EventArgs^ e) {
+}
+private: System::Void MyForm_Load(System::Object^ sender, System::EventArgs^ e) {
+}
+private: System::Void panel1_Paint(System::Object^ sender, System::Windows::Forms::PaintEventArgs^ e) {
+}
+private: System::Void panel2_Paint(System::Object^ sender, System::Windows::Forms::PaintEventArgs^ e) {
+}
+	private: System::Void button4_Click_1(System::Object^ sender, System::EventArgs^ e) {
+		
+		label1->Text = textBox1->Text;
+		label2->Text = textBox2->Text;
+		nmed = System::Int32::Parse(textBox1->Text);
+		nsum = System::Int32::Parse(textBox2->Text);
+		SUMIQE = SUMIQE + std::to_string(nsum) + " " + std::to_string(nmed) + " " + std::to_string(optmode) + " ";
+		data = 1;
+	//	pictureBox1->ImageLocation = ""
+		//std::cout << SUMIQE;
+		//std::cout << std::endl;
+	}
+
+private: System::Void button11_Click(System::Object^ sender, System::EventArgs^ e) {
+	
+}
+private: System::Void button12_Click(System::Object^ sender, System::EventArgs^ e) {
+	optmode = 0;
+}
+
+
+private: System::Void button13_Click(System::Object^ sender, System::EventArgs^ e) {
+	optmode = 1;
+
+}
+
+	private: System::Void button14_Click(System::Object^ sender, System::EventArgs^ e) {
+		pictureBox1->ImageLocation = "C:/ImagesTests/Stack100.png";
+	}
+/*	pathh = "C:/ImagesTests/Stack100.png";
+	bool exist;
+	while (exist != 1) {
+		exist = System::IO::File::Exists(pathh);
+		pictureBox1->ImageLocation = "C:/ImagesTests/Stack100.png";
+	}*/
+		// (files->Length != nfiles + 1) {}
+		//std::cout << "OKEEEY";
+		//std::cout << "AFTER"<< files->Length << std::endl;
+
+		//System::IO::DirectoryInfo ^dirinf = gcnew System::IO::DirectoryInfo ("C:/ImagesTests");
+		//dirinf->GetFiles()->Length;
+
+		/*while (control != 1) {
+			System::IO::DirectoryInfo^ dirinf1 = gcnew System::IO::DirectoryInfo("C:/ImagesTests");
+			dirinf1->GetFiles()->Length;
+			if (dirinf1 != dirinf) control = 1;
+			//Image->FromFile("C: / ImagesTests / Stack100.png");
+		}*/
+
+		//pictureBox1->ImageLocation = "C:/ImagesTests/Stack100.png";
+	//}
+
+//}
+
+private: System::Void label1_Click(System::Object^ sender, System::EventArgs^ e) {
+}
+private: System::Void textBox1_TextChanged(System::Object^ sender, System::EventArgs^ e) {
+}
+};
+}
